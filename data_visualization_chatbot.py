@@ -305,19 +305,43 @@ def get_visualization_suggestions():
         chat_history.append({"role": "assistant", "content": f"An error occurred while generating suggestions: {str(e)}"})
         return chat_history
 
+def handle_visualization_insight_request(uploaded_visual_path):
+    try:
+        # Generate a dummy insight for demonstration
+        # Replace this with actual LLM interaction if required
+        insights = f"Generated insights for {os.path.basename(uploaded_visual_path)}:\n"
+        insights += (
+            "- This bar chart shows the distribution of products by color and their stock levels.\n"
+            "- The most stocked color is blue, indicating higher demand or overstocking.\n"
+            "- The least stocked color is green, potentially signaling a supply issue or low demand."
+        )
 
-# Gradio Interface
+        # Save the insights to a text file
+        insights_file_path = os.path.join(os.getcwd(), "visualization_insights.txt")
+        with open(insights_file_path, "w") as file:
+            file.write(insights)
+
+        return [{"role": "assistant", "content": f"Insights saved to '{insights_file_path}'"}]
+    except Exception as e:
+        return [{"role": "assistant", "content": f"An error occurred: {str(e)}"}]
+
+
 with gr.Blocks() as interface:
     chatbot = gr.Chatbot(label="Data Visualization Chatbot", type="messages")
     file_upload = gr.File(label="Upload Excel Dataset", type="filepath")
     suggestion_button = gr.Button("Get Visualization Suggestions")
     visualization_request = gr.Textbox(label="Enter your visualization request")
     generate_button = gr.Button("Submit Visualization Request")
+    visualization_upload = gr.File(label="Upload Generated Visualization", type="filepath")
+    insight_button = gr.Button("Get Insights from Visualization")
 
     # File upload and visualization generation
     file_upload.change(handle_uploaded_file, inputs=[file_upload], outputs=chatbot)
-    suggestion_button.click(get_visualization_suggestions, inputs=[], outputs=chatbot)
+    suggestion_button.click(handle_visualization_suggestions, outputs=chatbot)
     generate_button.click(handle_visualization_request, inputs=[visualization_request], outputs=chatbot)
+
+    # Upload visualization and generate insights
+    insight_button.click(handle_visualization_insight_request, inputs=[visualization_upload], outputs=chatbot)
 
 if __name__ == "__main__":
     interface.launch()
